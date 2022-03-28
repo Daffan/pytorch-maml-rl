@@ -207,7 +207,22 @@ class MultiTaskSampler(Sampler):
         self._join_consumer_threads()
 
         self.closed = True
+        
 
+class CurriculumTaskSampler(MultiTaskSampler):
+    def __init__(self, env_name, env_kwargs, batch_size, policy, baseline, curriculum, offset=100, env=None, seed=None, num_workers=1):
+        super().__init__(env_name, env_kwargs, batch_size, policy, baseline, env, seed, num_workers)
+        self.curriculum = curriculum
+        self.num_episodes = 0
+        self.offset = offset
+        
+    def sample_tasks(self, num_tasks):
+        tasks = [self.curriculum[self.num_episodes + i * self.offset] 
+                 if self.num_episodes + i * self.offset < len(self.curriculum) 
+                 else self.curriculum[-1] 
+                 for i in range(num_tasks)]
+        self.num_episodes += self.batch_size
+        return tasks
 
 class SamplerWorker(mp.Process):
     def __init__(self,

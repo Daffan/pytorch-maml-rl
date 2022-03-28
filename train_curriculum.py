@@ -9,12 +9,14 @@ from tqdm import trange
 import maml_rl.envs
 from maml_rl.metalearners import MAMLTRPO
 from maml_rl.baseline import LinearFeatureBaseline
-from maml_rl.samplers import MultiTaskSampler
+from maml_rl.samplers import CurriculumTaskSampler
 from maml_rl.utils.helpers import get_policy_for_env, get_input_size
 from maml_rl.utils.reinforcement_learning import get_returns
 
 import wandb
 
+CURRICULUM = [0] * 1000 + [1] * 1000 + [2] * 1000 + [3] * 1000 + [4] * 1000 + [5] * 1000 + [6] * 1000 + [7] * 200
+OFFSET = 1000
 
 def main(args):
     with open(args.config, 'r') as f:
@@ -47,11 +49,13 @@ def main(args):
     baseline = LinearFeatureBaseline(get_input_size(env))
 
     # Sampler
-    sampler = MultiTaskSampler(config['env-name'],
+    sampler = CurriculumTaskSampler(config['env-name'],
                                env_kwargs=config.get('env-kwargs', {}),
                                batch_size=config['fast-batch-size'],
                                policy=policy,
                                baseline=baseline,
+                               curriculum=CURRICULUM, # config['curriculum'],
+                               offset=OFFSET,  # config['offset'],
                                env=env,
                                seed=args.seed,
                                num_workers=args.num_workers)
@@ -93,8 +97,12 @@ def main(args):
         if args.wandb:
             log_mean = {}
             for k in logs.keys():
-                if k != "tasks":
+                if k == "tasks":
+                    for i, t in enumerate(logs[k]):
+                        log_mean["%s_%d" %(k, i)] = t
+                else:
                     log_mean[k] = np.mean(logs[k]).item()
+                    
             wandb.log(log_mean)
 
 
