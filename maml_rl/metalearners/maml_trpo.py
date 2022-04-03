@@ -9,7 +9,7 @@ from maml_rl.utils.torch_utils import (weighted_mean, detach_distribution,
                                        to_numpy, vector_to_parameters)
 from maml_rl.utils.optimization import conjugate_gradient
 from maml_rl.utils.reinforcement_learning import reinforce_loss
-
+from IPython.core.debugger import set_trace
 
 class MAMLTRPO(GradientBasedMetaLearner):
     """Model-Agnostic Meta-Learning (MAML, [1]) for Reinforcement Learning
@@ -60,15 +60,16 @@ class MAMLTRPO(GradientBasedMetaLearner):
         if first_order is None:
             first_order = self.first_order
         # Loop over the number of steps of adaptation
-        params = None
-        for futures in train_futures:
-            inner_loss = reinforce_loss(self.policy,
-                                        await futures,
-                                        params=params)
-            params = self.policy.update_params(inner_loss,
-                                               params=params,
-                                               step_size=self.fast_lr,
-                                               first_order=first_order)
+        params=None
+        if train_futures[0] is not None:
+            for futures in train_futures:
+                inner_loss = reinforce_loss(self.policy,
+                                            await futures,
+                                            params=params)
+                params = self.policy.update_params(inner_loss,
+                                                params=params,
+                                                step_size=self.fast_lr,
+                                                first_order=first_order)
         return params
 
     def hessian_vector_product(self, kl, damping=1e-2):
@@ -118,9 +119,17 @@ class MAMLTRPO(GradientBasedMetaLearner):
              cg_damping=1e-2,
              ls_max_steps=10,
              ls_backtrack_ratio=0.5):
-        num_tasks = len(train_futures[0])
+
+        
+        num_tasks = len(valid_futures)
+        # num_tasks = len(train_futures[0])
+        if train_futures is None or len(train_futures) ==0:
+            train_futures = [[None] * num_tasks]
         logs = {}
 
+        # print(train_futures)
+        # print(valid_futures)
+        # set_trace()
         # Compute the surrogate loss
         old_losses, old_kls, old_pis = self._async_gather([
             self.surrogate_loss(train, valid, old_pi=None)
@@ -128,8 +137,11 @@ class MAMLTRPO(GradientBasedMetaLearner):
 
         logs['loss_before'] = to_numpy(old_losses)
         logs['kl_before'] = to_numpy(old_kls)
-
-        old_loss = sum(old_losses) / num_tasks
+        
+        if num_tasks == 0:
+            old_loss = 0 
+        else:
+            old_loss = sum(old_losses) / num_tasks
         grads = torch.autograd.grad(old_loss,
                                     self.policy.parameters(),
                                     retain_graph=True)
