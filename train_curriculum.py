@@ -15,8 +15,9 @@ from maml_rl.utils.reinforcement_learning import get_returns
 
 import wandb
 
-CURRICULUM = [0] * 1000 + [1] * 1000 + [2] * 1000 + [3] * 1000 + [4] * 1000 + [5] * 1000 + [6] * 1000 + [7] * 200
-OFFSET = 1000
+NUM_TRAJ_PER_ITER = 3000
+CURRICULUM = [0] * NUM_TRAJ_PER_ITER + [1] * NUM_TRAJ_PER_ITER + [2] * NUM_TRAJ_PER_ITER + [3] * NUM_TRAJ_PER_ITER + [4] * NUM_TRAJ_PER_ITER + [5] * NUM_TRAJ_PER_ITER + [6] * NUM_TRAJ_PER_ITER + [7] * NUM_TRAJ_PER_ITER 
+OFFSET = NUM_TRAJ_PER_ITER
 
 def main(args):
     with open(args.config, 'r') as f:
@@ -82,12 +83,21 @@ def main(args):
                                 ls_backtrack_ratio=config['ls-backtrack-ratio'])
 
         train_episodes, valid_episodes = sampler.sample_wait(futures)
-        num_iterations += sum(sum(episode.lengths) for episode in train_episodes[0])
+        if train_episodes is not None and len(train_episodes) != 0:
+            num_iterations += sum(sum(episode.lengths) for episode in train_episodes[0])
         num_iterations += sum(sum(episode.lengths) for episode in valid_episodes)
-        logs.update(tasks=tasks,
-                    num_iterations=num_iterations,
-                    train_returns=get_returns(train_episodes[0]),
-                    valid_returns=get_returns(valid_episodes))
+
+        if train_episodes is not None and len(train_episodes) != 0:
+            logs.update(tasks=tasks,
+                        num_iterations=num_iterations,
+                        train_returns=get_returns(train_episodes[0]),
+                        valid_returns=get_returns(valid_episodes))
+        else:
+            logs.update(tasks=tasks,
+                        num_iterations=num_iterations,
+                        train_returns=0,
+                        valid_returns=get_returns(valid_episodes))
+
 
         # Save policy
         if args.output_folder is not None:
