@@ -127,8 +127,8 @@ class MAMLTRPO(GradientBasedMetaLearner):
             train_futures = [[None] * num_tasks]
         logs = {}
 
-        # print(train_futures)
-        # print(valid_futures)
+        # print("train_futures", train_futures)
+        # print("valid_fugures", valid_futures)
         # set_trace()
         # Compute the surrogate loss
         old_losses, old_kls, old_pis = self._async_gather([
