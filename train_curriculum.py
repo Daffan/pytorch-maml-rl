@@ -15,7 +15,8 @@ from maml_rl.utils.reinforcement_learning import get_returns
 
 import wandb
 
-CURRICULUM = [0] * 1000 + [1] * 1000 + [2] * 1000 + [3] * 1000 + [4] * 1000 + [5] * 1000 + [6] * 1000 + [7] * 200
+#CURRICULUM = [0] * 1000 + [1] * 1000 + [2] * 1000 + [3] * 1000 + [4] * 1000 + [5] * 1000 + [6] * 1000 + [7] * 200
+CURRICULUM = [0] * 1000 + [1] * 1000 
 OFFSET = 1000
 
 def main(args):
