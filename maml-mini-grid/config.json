@@ -1614,7 +1614,7 @@
   "fast-batch-size": 20,
   "num-steps": 0,
   "fast-lr": 0.01,
-  "num-batches": 5000,
+  "num-batches": 1500,
   "meta-batch-size": 4,
   "max-kl": 0.01,
   "cg-iters": 10,
@@ -1627,6 +1627,6 @@
   "num_workers": 8,
   "use_cuda": false,
   "wandb": true,
-  "name": "mini-grid",
+  "name": "mini-grid-trpo",
   "device": "cpu"
 }

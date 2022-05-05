@@ -70,3 +70,9 @@ register(
     entry_point='maml_rl.envs.three_difficulty_level:ThreeDifficultyLevelEnvShort',
     max_episode_steps=1000
 )
+
+register(
+    'TwoDifferentTask-v0',
+    entry_point='maml_rl.envs.two_different_task:TwoDifferentTask',
+    max_episode_steps=1000
+)

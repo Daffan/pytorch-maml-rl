@@ -9,6 +9,7 @@ from maml_rl.policies import CategoricalMLPPolicy, NormalMLPPolicy
 
 def get_policy_for_env(env, hidden_sizes=(100, 100), nonlinearity='relu'):
     continuous_actions = isinstance(env.action_space, gym.spaces.Box)
+    print("env obs shape", env.observation_space.shape)
     input_size = get_input_size(env)
     nonlinearity = getattr(torch, nonlinearity)
 

@@ -15,11 +15,13 @@ from maml_rl.utils.reinforcement_learning import get_returns
 
 import wandb
 
-NUM_TRAJ_PER_ITER = 1000
-CURRICULUM = [0] * NUM_TRAJ_PER_ITER + [1] * NUM_TRAJ_PER_ITER + [2] * NUM_TRAJ_PER_ITER + [3] * NUM_TRAJ_PER_ITER + [4] * NUM_TRAJ_PER_ITER + [5] * NUM_TRAJ_PER_ITER + [6] * NUM_TRAJ_PER_ITER + [7] * NUM_TRAJ_PER_ITER 
+NUM_TRAJ_PER_ITER = 3000
+#CURRICULUM = [0] * NUM_TRAJ_PER_ITER + [1] * NUM_TRAJ_PER_ITER + [2] * NUM_TRAJ_PER_ITER + [3] * NUM_TRAJ_PER_ITER + [4] * NUM_TRAJ_PER_ITER + [5] * NUM_TRAJ_PER_ITER + [6] * NUM_TRAJ_PER_ITER + [7] * NUM_TRAJ_PER_ITER 
+CURRICULUM = [0] * NUM_TRAJ_PER_ITER + [1] * NUM_TRAJ_PER_ITER 
 OFFSET = NUM_TRAJ_PER_ITER
 
 def main(args):
+    print("begin to compute")
     with open(args.config, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -37,6 +39,7 @@ def main(args):
         torch.manual_seed(args.seed)
         torch.cuda.manual_seed_all(args.seed)
 
+    #env = gym.make(config['env-name'], **config.get('env-kwargs', {}))
     env = gym.make(config['env-name'], **config.get('env-kwargs', {}))
     env.close()
 
@@ -65,7 +68,7 @@ def main(args):
                            fast_lr=config['fast-lr'],
                            first_order=config['first-order'],
                            device=args.device)
-
+    print("start iteration")
     num_iterations = 0
     for batch in trange(config['num-batches']):
         tasks = sampler.sample_tasks(num_tasks=config['meta-batch-size'])
@@ -82,6 +85,9 @@ def main(args):
                                 ls_max_steps=config['ls-max-steps'],
                                 ls_backtrack_ratio=config['ls-backtrack-ratio'])
 
+        print("wait for rollout")
+        train_episodes, valid_episodes = sampler.sample_wait(futures)
+        print("compute updates")
         train_episodes, valid_episodes = sampler.sample_wait(futures)
         if train_episodes is not None and len(train_episodes) != 0:
             num_iterations += sum(sum(episode.lengths) for episode in train_episodes[0])
